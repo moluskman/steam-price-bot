@@ -1,6 +1,9 @@
 import discord  # imports
 import os
 from dotenv import load_dotenv
+from src.database import (
+    init_db,
+)  # import from database file allowing 2 files to talk to each other
 
 load_dotenv()
 
@@ -11,6 +14,7 @@ client = discord.Client(intents=intents)
 
 @client.event  # Event listener for when the bot is ready
 async def on_ready():
+    init_db()  # Initializes the database when the bot is ready
     print("Jewvis Online")
 
 
