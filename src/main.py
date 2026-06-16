@@ -1,17 +1,19 @@
-import discord  # imports
+import discord
 import os
-from src.commands import (
-    handle_commands,
-)  # import from commands file allowing 2 files to talk to each other
 from dotenv import load_dotenv
-from src.database import (
-    init_db,
-)  # import from database file allowing 2 files to talk to each other
+from src.database import init_db
+from src.commands import handle_commands
 
+# Load environment variables
 load_dotenv()
 
-intents = discord.Intents.default()  # Bot permissions and intents
+
+intents = discord.Intents.default()
+
+
 intents.message_content = True
+
+# 3. Pass those intents into your client
 client = discord.Client(intents=intents)
 
 
