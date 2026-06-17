@@ -41,23 +41,28 @@ def add_tracked_game(app_id: int, name: str, original_price: float) -> bool:
         conn.close()
 
 
-def remove_tracked_game(
-    app_id: int,
-) -> bool:  # function to delete a game form being watched
+def remove_tracked_game(app_id: int) -> str | None:
     """
-    Deletes a game from the tracking database using its App ID. Returns True if a game was removed, False otherwise,
+    Deletes a game from the tracking database using its App ID.
+    Returns the game's name if removed, or None if it wasn't tracked.
     """
     conn = sqlite3.connect("data/bot.db")  # opens connection to sqlite file
     cursor = conn.cursor()
-    cursor.execute(
-        "DELETE FROM tracked_games WHERE app_id = ?", (app_id,)
-    )  # deletes the game with the matching app id
-    rows_affected = (
-        cursor.rowcount
-    )  # checks how many rows were affected by the delete command
-    conn.commit()  # commits the changes to the database
-    conn.close()  # closes the connection to the database
 
-    return (
-        rows_affected > 0
-    )  # returns true if a game was deleted, false if no game was found with that app id
+    # Checks if the game exists in the database and grabs the row if found
+    cursor.execute("SELECT name FROM tracked_games WHERE app_id = ?", (app_id,))
+    result = cursor.fetchone()  # fetches the first row of the query result
+
+    if result:
+        game_name = result[0]  # extracts the game name from the query result
+
+        # Deletes the game with the matching app id
+        cursor.execute("DELETE FROM tracked_games WHERE app_id = ?", (app_id,))
+
+        conn.commit()  # commits the changes to the database
+        conn.close()  # closes the connection safely
+        return game_name  # returns the name of the deleted game
+
+    # If the game was not found in the database
+    conn.close()  # closes the connection safely
+    return None  # returns None to indicate no game was found

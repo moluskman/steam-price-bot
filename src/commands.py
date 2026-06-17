@@ -71,14 +71,16 @@ async def handle_commands(message: discord.Message):
             )
             return
 
-        #  run the removal logic safely outside the try/except block
-        was_removed = remove_tracked_game(game_id)
-        if was_removed:
+        # run the removal logic safely outside the try/except block
+        game_name = remove_tracked_game(game_id)
+        if game_name:
             embed = discord.Embed(
                 title="Stopped Watching Game",
-                description=f"Successfully removed the game with ID **{game_id}** from the watchlist.",
+                description=f"Successfully removed **{game_name}** from the watchlist.",
                 color=discord.Color.red(),  # red border bc removing it
             )
+            image_url = f"https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/{game_id}/header.jpg"
+            embed.set_image(url=image_url)
             await message.channel.send(embed=embed)
             return  # stops bot so it doesn't leak into other logic
         else:
