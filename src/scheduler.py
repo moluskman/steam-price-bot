@@ -3,7 +3,9 @@ from discord.ext import tasks
 import sqlite3
 from src.steam_api import get_steam_game
 
-ALERT_CHANNEL_ID = 1515634550187753602
+import os
+
+ALERT_CHANNEL_ID = int(os.getenv("ALERT_CHANNEL_ID"))
 
 
 def get_all_tracked_games():
