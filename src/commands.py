@@ -4,35 +4,21 @@ from src.database import add_tracked_game, remove_tracked_game
 
 
 async def handle_commands(message: discord.Message):
+    # watch command
     if message.content.startswith("!watch"):  # checks for command
         command_arg = message.content[
             7:
         ].strip()  # .strip() removes any accidental extra spaces at the start or end
-    if message.content.startswith("!stopwatching"):
-        command_arg = message.content[14:].strip()
         try:
             game_id = int(command_arg)  # converts the app id to an integer
         except ValueError:  # if the app id is not a valid integer
             game_id = await search_steam_game(command_arg)  # try searching by name
-            was_removed = remove_tracked_game(
-                game_id
-            )  # try to remove the game from the database
-            if was_removed:
-                embed = discord.Embed(
-                    title="Stopped Watching Game",
-                    description=f"Successfully removed the game with ID **{game_id}** from the watchlist.",
-                    color=discord.Color.red(),  # red border bc removing it
-                )
-                await message.channel.send(embed=embed)
-            else:
-                await message.channel.send(
-                    f"I wasn't tracking a game with ID **{game_id}**."
-                )
-            if not game_id:
-                await message.channel.send(
-                    " Could not find that game on Steam. Double-check the name!"
-                )
-                return
+
+        if not game_id:
+            await message.channel.send(
+                " Could not find that game on Steam. Double-check the name!"
+            )
+            return
 
         await message.channel.send(f" Looking up Steam App ID: {game_id}...")
         game_data = await get_steam_game(game_id)  # get game data from steam api
@@ -42,7 +28,7 @@ async def handle_commands(message: discord.Message):
             is_new_game = add_tracked_game(game_id, name, original_price)
 
             if is_new_game:
-                # CREATE DISCORD EMBED
+                # create discord embed to confirm command success with game details and image
                 embed = discord.Embed(
                     title=" Now Tracking Game!",
                     description=f"Successfully added **{name}** to the watchlist.",
@@ -67,3 +53,36 @@ async def handle_commands(message: discord.Message):
             await message.channel.send(
                 " Could not find that game on Steam. Double-check the ID!"
             )
+
+    # stop watching command
+    if message.content.startswith("!stopwatching"):
+        command_arg = message.content[14:].strip()
+
+        # find the ID
+        try:
+            game_id = int(command_arg)  # converts the app id to an integer
+        except ValueError:  # if the app id is not a valid integer
+            game_id = await search_steam_game(command_arg)  # try searching by name
+
+        #  verify the ID exists
+        if not game_id:
+            await message.channel.send(
+                " Could not find that game on Steam. Double-check the name!"
+            )
+            return
+
+        #  run the removal logic safely outside the try/except block
+        was_removed = remove_tracked_game(game_id)
+        if was_removed:
+            embed = discord.Embed(
+                title="Stopped Watching Game",
+                description=f"Successfully removed the game with ID **{game_id}** from the watchlist.",
+                color=discord.Color.red(),  # red border bc removing it
+            )
+            await message.channel.send(embed=embed)
+            return  # stops bot so it doesn't leak into other logic
+        else:
+            await message.channel.send(
+                f"I wasn't tracking a game with ID **{game_id}**."
+            )
+            return
