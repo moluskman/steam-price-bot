@@ -1,6 +1,6 @@
 import discord
 from src.steam_api import get_steam_game, extract_price_info, search_steam_game
-from src.database import add_tracked_game
+from src.database import add_tracked_game, remove_tracked_game
 
 
 async def handle_commands(message: discord.Message):
@@ -8,10 +8,26 @@ async def handle_commands(message: discord.Message):
         command_arg = message.content[
             7:
         ].strip()  # .strip() removes any accidental extra spaces at the start or end
+    if message.content.startswith("!stopwatching"):
+        command_arg = message.content[14:].strip()
         try:
             game_id = int(command_arg)  # converts the app id to an integer
         except ValueError:  # if the app id is not a valid integer
             game_id = await search_steam_game(command_arg)  # try searching by name
+            was_removed = remove_tracked_game(
+                game_id
+            )  # try to remove the game from the database
+            if was_removed:
+                embed = discord.Embed(
+                    title="Stopped Watching Game",
+                    description=f"Successfully removed the game with ID **{game_id}** from the watchlist.",
+                    color=discord.Color.red(),  # red border bc removing it
+                )
+                await message.channel.send(embed=embed)
+            else:
+                await message.channel.send(
+                    f"I wasn't tracking a game with ID **{game_id}**."
+                )
             if not game_id:
                 await message.channel.send(
                     " Could not find that game on Steam. Double-check the name!"
