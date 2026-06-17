@@ -6,10 +6,11 @@ conn = sqlite3.connect("data/bot.db")
 def init_db():  # Database initialization and function pointing to database file
     conn = sqlite3.connect("data/bot.db")
     c = conn.cursor()
-    c.execute("""CREATE TABLE IF NOT EXISTS tracked_games (
-    app_id INTEGER PRIMARY KEY,
-    game_name TEXT,
-    original_price REAL
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS tracked_games (
+            app_id INTEGER PRIMARY KEY,
+            name TEXT,
+            original_price REAL
 )""")
     conn.commit()
     conn.close()
@@ -31,6 +32,7 @@ def add_tracked_game(app_id: int, name: str, original_price: float) -> bool:
             cursor.rowcount > 0
         )  # if row was changed it means new game was added, otherwise it was already tracked
         conn.commit()
+        print(f"DEBUG: Inserted game. Rowcount: {cursor.rowcount}, Success: {success}")
         return success
     except sqlite3.Error as e:
         print(f"Database error: {e}")
