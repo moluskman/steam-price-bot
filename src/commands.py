@@ -1,5 +1,6 @@
 import discord
 from src.steam_api import get_steam_game, extract_price_info
+from src.database import add_tracked_game
 
 
 async def handle_commands(message: discord.Message):
@@ -19,9 +20,13 @@ async def handle_commands(message: discord.Message):
                     name, original_price = extract_price_info(
                         game_data
                     )  # extract just the name and original price from the game data
-                    await message.channel.send(
-                        f" Now watching **{name}**! Original Price: ${original_price:.2f}"
-                    )
+                    is_new_game = add_tracked_game(game_id, name, original_price)
+                    if is_new_game:
+                        await message.channel.send(
+                            f" Now watching **{name}**! Original Price: ${original_price:.2f}"
+                        )
+                    else:
+                        await message.channel.send(f" I'm already watching **{name}**!")
                 else:
                     await message.channel.send(
                         " Could not find that game on Steam. Double-check the ID!"
