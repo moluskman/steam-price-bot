@@ -5,6 +5,12 @@ from src.database import add_tracked_game, remove_tracked_game, get_watchlist
 
 async def handle_commands(message: discord.Message):
     # watch command
+    if message.content.startswith("!testalert"):
+        from src.scheduler import check_for_sales
+
+        await message.channel.send("Manually triggering a sales check...")
+        await check_for_sales(message.guild.me.client)
+        return
     if message.content.startswith("!watchlist"):
         games = get_watchlist()
         if not games:
