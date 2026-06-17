@@ -1,16 +1,19 @@
 import discord
-from src.steam_api import get_steam_game, extract_price_info, search_steam_game
-from src.database import add_tracked_game, remove_tracked_game, get_watchlist
+from database import add_tracked_game, get_watchlist, remove_tracked_game
+from steam_api import extract_price_info, get_steam_game, search_steam_game
 
 
 async def handle_commands(message: discord.Message):
-    # watch command
+    # !testalert command
     if message.content.startswith("!testalert"):
-        from src.scheduler import check_for_sales
+        from scheduler import check_for_sales
 
         await message.channel.send("Manually triggering a sales check...")
-        await check_for_sales(message.guild.me.client)
+        # Bypasses the loop framework to run the core function right away for testing
+        await check_for_sales.__wrapped__(message.guild.me.client)
         return
+
+    # !watchlist command
     if message.content.startswith("!watchlist"):
         games = get_watchlist()
         if not games:
@@ -20,36 +23,34 @@ async def handle_commands(message: discord.Message):
         for app_id, name, original_price in games:
             embed.add_field(name=name, value=f"${original_price:.2f}", inline=False)
         await message.channel.send(embed=embed)
-        return  # stops so it doesn't do !watch
+        return
 
-    if message.content.startswith("!watch"):  # checks for command
-        command_arg = message.content[
-            7:
-        ].strip()  # .strip() removes any accidental extra spaces at the start or end
+    # !watch command
+    if message.content.startswith("!watch"):
+        command_arg = message.content[7:].strip()
         try:
-            game_id = int(command_arg)  # converts the app id to an integer
-        except ValueError:  # if the app id is not a valid integer
-            game_id = await search_steam_game(command_arg)  # try searching by name
+            game_id = int(command_arg)
+        except ValueError:
+            game_id = await search_steam_game(command_arg)
 
         if not game_id:
             await message.channel.send(
-                " Could not find that game on Steam. Double-check the name!"
+                "Could not find that game on Steam. Double-check the name!"
             )
             return
 
-        await message.channel.send(f" Looking up Steam App ID: {game_id}...")
-        game_data = await get_steam_game(game_id)  # get game data from steam api
+        await message.channel.send(f"Looking up Steam App ID: {game_id}...")
+        game_data = await get_steam_game(game_id)
 
-        if game_data:  # check if game data was found
+        if game_data:
             name, original_price = extract_price_info(game_data)
             is_new_game = add_tracked_game(game_id, name, original_price)
 
             if is_new_game:
-                # create discord embed to confirm command success with game details and image
                 embed = discord.Embed(
-                    title=" Now Tracking Game!",
+                    title="Now Tracking Game!",
                     description=f"Successfully added **{name}** to the watchlist.",
-                    color=discord.Color.green(),  # Green border side bar
+                    color=discord.Color.green(),
                 )
                 embed.add_field(name="Game Name", value=name, inline=True)
                 embed.add_field(
@@ -58,50 +59,44 @@ async def handle_commands(message: discord.Message):
                     inline=True,
                 )
 
-                # Add the Steam header image
                 image_url = f"https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/{game_id}/header.jpg"
                 embed.set_image(url=image_url)
-
-                # Send the embed instead of standard text
                 await message.channel.send(embed=embed)
             else:
-                await message.channel.send(f" I'm already watching **{name}**!")
+                await message.channel.send(f"I'm already watching **{name}**!")
         else:
             await message.channel.send(
-                " Could not find that game on Steam. Double-check the ID!"
+                "Could not find that game on Steam. Double-check the ID!"
             )
+        return
 
-    # stop watching command
+    # !stopwatching command
     if message.content.startswith("!stopwatching"):
         command_arg = message.content[14:].strip()
 
-        # find the ID
         try:
-            game_id = int(command_arg)  # converts the app id to an integer
-        except ValueError:  # if the app id is not a valid integer
-            game_id = await search_steam_game(command_arg)  # try searching by name
+            game_id = int(command_arg)
+        except ValueError:
+            game_id = await search_steam_game(command_arg)
 
-        #  verify the ID exists
         if not game_id:
             await message.channel.send(
-                " Could not find that game on Steam. Double-check the name!"
+                "Could not find that game on Steam. Double-check the name!"
             )
             return
 
-        # run the removal logic safely outside the try/except block
         game_name = remove_tracked_game(game_id)
         if game_name:
             embed = discord.Embed(
                 title="Stopped Watching Game",
                 description=f"Successfully removed **{game_name}** from the watchlist.",
-                color=discord.Color.red(),  # red border bc removing it
+                color=discord.Color.red(),
             )
             image_url = f"https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/{game_id}/header.jpg"
             embed.set_image(url=image_url)
             await message.channel.send(embed=embed)
-            return  # stops bot so it doesn't leak into other logic
         else:
             await message.channel.send(
                 f"I wasn't tracking a game with ID **{game_id}**."
             )
-            return
+        return

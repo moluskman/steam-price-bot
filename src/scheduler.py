@@ -1,15 +1,14 @@
+import os
+import sqlite3
 import discord
 from discord.ext import tasks
-import sqlite3
-from src.steam_api import get_steam_game
-import os
+from steam_api import get_steam_game
 
-ALERT_CHANNEL_ID = int(os.getenv("ALERT_CHANNEL_ID"))
-ALERT_ROLE_ID = int(os.getenv("ALERT_ROLE_ID"))
+ALERT_CHANNEL_ID = int(os.getenv("ALERT_CHANNEL_ID", 0))
+ALERT_ROLE_ID = int(os.getenv("ALERT_ROLE_ID", 0))
 
 
 def get_all_tracked_games():
-    """Fetches all tracked games from the database."""
     conn = sqlite3.connect("data/bot.db")
     cursor = conn.cursor()
     cursor.execute("SELECT app_id, name, original_price FROM tracked_games")
