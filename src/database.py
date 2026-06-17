@@ -66,3 +66,13 @@ def remove_tracked_game(app_id: int) -> str | None:
     # If the game was not found in the database
     conn.close()  # closes the connection safely
     return None  # returns None to indicate no game was found
+
+
+def get_watchlist():  # watchlist retrieval function
+    """Returns a list of all tracked games in the database"""
+    conn = sqlite3.connect("data/bot.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM tracked_games")
+    games = cursor.fetchall()  # fetches all rows of the query result
+    conn.close()
+    return games
