@@ -56,7 +56,7 @@ def remove_tracked_game(app_id: int) -> str | None:
     if result:
         game_name = result[0]  # extracts the game name from the query result
 
-        # Deletes the game with the matching app id
+        # deletes the game with the matching app id
         cursor.execute("DELETE FROM tracked_games WHERE app_id = ?", (app_id,))
 
         conn.commit()  # commits the changes to the database
