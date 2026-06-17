@@ -1,39 +1,33 @@
 import discord
 import os
 from dotenv import load_dotenv
-from src.database import init_db
-from src.commands import handle_commands
 
-# Load environment variables
+# 1. Load the environment variables first!
 load_dotenv()
 
+# 2. Now it's safe to import your local files
+from src.database import init_db
+from src.commands import handle_commands
+from src.scheduler import check_for_sales
 
 intents = discord.Intents.default()
-
-
 intents.message_content = True
 
-# 3. Pass those intents into your client
 client = discord.Client(intents=intents)
 
 
-@client.event  # Event listener for when the bot is ready
+@client.event
 async def on_ready():
-    init_db()  # Initializes the database when the bot is ready
+    init_db()
     print("Jewvis Online")
+    check_for_sales.start(client)
 
 
 @client.event
 async def on_message(message):
-    if (
-        message.author == client.user
-    ):  # Ignore messsages sent by the bot itself to prevent infinite loops
+    if message.author == client.user:
         return
-    await handle_commands(
-        message
-    )  # Pass the message to command system to look for !watch command and handle it accordingly
+    await handle_commands(message)
 
 
-client.run(
-    os.getenv("DISCORD_BOT_TOKEN")
-)  # Grabs bot token from env file and runs the bot
+client.run(os.getenv("DISCORD_BOT_TOKEN"))
