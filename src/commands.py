@@ -14,6 +14,8 @@ async def handle_commands(message: discord.Message):
         for app_id, name, original_price in games:
             response_text += f"- {name}: ${original_price:.2f}\n"  # += adds on cleanly and 2f limits 2 decimal places and \n makes it go to a new line every time
         await message.channel.send(response_text)
+        return  # stops so it doesn't do !watch
+
     if message.content.startswith("!watch"):  # checks for command
         command_arg = message.content[
             7:
