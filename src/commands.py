@@ -1,10 +1,19 @@
 import discord
 from src.steam_api import get_steam_game, extract_price_info, search_steam_game
-from src.database import add_tracked_game, remove_tracked_game
+from src.database import add_tracked_game, remove_tracked_game, get_watchlist
 
 
 async def handle_commands(message: discord.Message):
     # watch command
+    if message.content.startswith("!watchlist"):
+        games = get_watchlist()
+        if not games:
+            await message.channel.send("Your watchlist is currently empty.")
+            return
+        response_text = "**Your Current Watchlist:**\n"
+        for app_id, name, original_price in games:
+            response_text += f"- {name}: ${original_price:.2f}\n"  # += adds on cleanly and 2f limits 2 decimal places and \n makes it go to a new line every time
+        await message.channel.send(response_text)
     if message.content.startswith("!watch"):  # checks for command
         command_arg = message.content[
             7:
