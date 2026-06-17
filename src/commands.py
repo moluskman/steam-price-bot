@@ -10,10 +10,10 @@ async def handle_commands(message: discord.Message):
         if not games:
             await message.channel.send("Your watchlist is currently empty.")
             return
-        response_text = "**Your Current Watchlist:**\n"
+        embed = discord.Embed(title="Your Current Wishlist", color=discord.Color.blue())
         for app_id, name, original_price in games:
-            response_text += f"- {name}: ${original_price:.2f}\n"  # += adds on cleanly and 2f limits 2 decimal places and \n makes it go to a new line every time
-        await message.channel.send(response_text)
+            embed.add_field(name=name, value=f"${original_price:.2f}", inline=False)
+        await message.channel.send(embed=embed)
         return  # stops so it doesn't do !watch
 
     if message.content.startswith("!watch"):  # checks for command
