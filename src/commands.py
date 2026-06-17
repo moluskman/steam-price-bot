@@ -1,37 +1,53 @@
 import discord
-from src.steam_api import get_steam_game, extract_price_info
+from src.steam_api import get_steam_game, extract_price_info, search_steam_game
 from src.database import add_tracked_game
 
 
 async def handle_commands(message: discord.Message):
     if message.content.startswith("!watch"):  # checks for command
-        parts = message.content.split()  # splits the message into parts
-        if len(parts) > 1:  # checks if there is an app id provided
-            app_id = parts[1]  # gets the app id from the message
-            try:
-                game_id = int(app_id)  # converts the app id to an integer
+        command_arg = message.content[
+            7:
+        ].strip()  # .strip() removes any accidental extra spaces at the start or end
+        try:
+            game_id = int(command_arg)  # converts the app id to an integer
+        except ValueError:  # if the app id is not a valid integer
+            game_id = await search_steam_game(command_arg)  # try searching by name
+            if not game_id:
                 await message.channel.send(
-                    f" Looking up Steam App ID: {game_id}..."
-                )  # loading message
-                game_data = await get_steam_game(
-                    game_id
-                )  # get game data from steam api
-                if game_data:  # check if game data was found
-                    name, original_price = extract_price_info(
-                        game_data
-                    )  # extract just the name and original price from the game data
-                    is_new_game = add_tracked_game(game_id, name, original_price)
-                    if is_new_game:
-                        await message.channel.send(
-                            f" Now watching **{name}**! Original Price: ${original_price:.2f}"
-                        )
-                    else:
-                        await message.channel.send(f" I'm already watching **{name}**!")
-                else:
-                    await message.channel.send(
-                        " Could not find that game on Steam. Double-check the ID!"
-                    )
-            except ValueError:  # if the app id is not a valid integer
-                await message.channel.send(
-                    " Please provide a valid Steam App ID.! Example: `!watch 570`"
+                    " Could not find that game on Steam. Double-check the name!"
                 )
+                return
+
+        await message.channel.send(f" Looking up Steam App ID: {game_id}...")
+        game_data = await get_steam_game(game_id)  # get game data from steam api
+
+        if game_data:  # check if game data was found
+            name, original_price = extract_price_info(game_data)
+            is_new_game = add_tracked_game(game_id, name, original_price)
+
+            if is_new_game:
+                # CREATE DISCORD EMBED
+                embed = discord.Embed(
+                    title=" Now Tracking Game!",
+                    description=f"Successfully added **{name}** to the watchlist.",
+                    color=discord.Color.green(),  # Green border side bar
+                )
+                embed.add_field(name="Game Name", value=name, inline=True)
+                embed.add_field(
+                    name="Original Price",
+                    value=f"${original_price:.2f}",
+                    inline=True,
+                )
+
+                # Add the Steam header image
+                image_url = f"https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/{game_id}/header.jpg"
+                embed.set_image(url=image_url)
+
+                # Send the embed instead of standard text
+                await message.channel.send(embed=embed)
+            else:
+                await message.channel.send(f" I'm already watching **{name}**!")
+        else:
+            await message.channel.send(
+                " Could not find that game on Steam. Double-check the ID!"
+            )
