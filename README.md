@@ -1,6 +1,6 @@
 # Steam Price Tracking Bot
 
-**Run the bot: python src/main.py**
+
 
 A Discord bot that monitors a custom watchlist of Steam games and automatically pings a specific server role when a game goes on sale.
 
@@ -17,5 +17,6 @@ A Discord bot that monitors a custom watchlist of Steam games and automatically 
    ```text
    DISCORD_BOT_TOKEN=your_bot_token_here
    ALERT_CHANNEL_ID=your_channel_id
-   ALERT_ROLE_ID=your_role_id
+   ALERT_ROLE_ID=your_role_id'''
+4.**Run the bot: python src/main.py**
 
