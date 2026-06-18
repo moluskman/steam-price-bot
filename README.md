@@ -18,5 +18,5 @@ A Discord bot that monitors a custom watchlist of Steam games and automatically 
    DISCORD_BOT_TOKEN=your_bot_token_here
    ALERT_CHANNEL_ID=your_channel_id
    ALERT_ROLE_ID=your_role_id'''
-4.**Run the bot: python src/main.py**
+4.**Run the bot in terminal: python src/main.py**
 
