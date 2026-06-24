@@ -1,9 +1,14 @@
+import os
 import sqlite3
 
+# this line automatically creates the data folder if it doesn't exist yet
+os.makedirs("data", exist_ok=True)
+
+# now it connect to the database
 conn = sqlite3.connect("data/bot.db")
 
 
-def init_db():  # Database initialization and function pointing to database file
+def init_db():  # database initialisation and function pointing to database file
     conn = sqlite3.connect("data/bot.db")
     c = conn.cursor()
     c.execute("""
@@ -42,8 +47,8 @@ def add_tracked_game(app_id: int, name: str, original_price: float) -> bool:
 
 
 def remove_tracked_game(app_id: int) -> str | None:
-    """
-    Deletes a game from the tracking database using its App ID.
+    """Deletes a game from the tracking database using its App ID.
+
     Returns the game's name if removed, or None if it wasn't tracked.
     """
     conn = sqlite3.connect("data/bot.db")  # opens connection to sqlite file

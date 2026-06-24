@@ -4,8 +4,8 @@ import discord
 from discord.ext import tasks
 from steam_api import get_steam_game
 
-ALERT_CHANNEL_ID = int(os.getenv("ALERT_CHANNEL_ID", 0))
-ALERT_ROLE_ID = int(os.getenv("ALERT_ROLE_ID", 0))
+ALERT_CHANNEL_ID = int(os.getenv("ALERT_CHANNEL_ID"))
+ALERT_ROLE_ID = int(os.getenv("ALERT_ROLE_ID"))
 
 
 def get_all_tracked_games():
@@ -34,13 +34,13 @@ async def check_for_sales(client: discord.Client):
             if not data_block:
                 continue
 
-            current_price = data_block.get("final") / 100
+            # check Steam's official discount value directly
+            api_discount = data_block.get("discount_percent", 0)
 
-            if current_price < original_price:
-                discount_percent = int(
-                    ((original_price - current_price) / original_price) * 100
-                )
+            #  alert if Steam explicitly says there is a discount active
+            if api_discount > 0:
+                current_price = data_block.get("final") / 100
 
                 await channel.send(
-                    f"<@&{ALERT_ROLE_ID}> **{name}** is on sale! Original Price: ${original_price:.2f}, Current Price: ${current_price:.2f} ({discount_percent}% off)"
+                    f"<@&{ALERT_ROLE_ID}> **{name}** is on sale! Original Price: ${original_price:.2f}, Current Price: ${current_price:.2f} ({api_discount}% off)"
                 )
